@@ -1,0 +1,40 @@
+package net.kartikverma.childcare.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.boot.webmvc.autoconfigure.WebMvcProperties;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "reviews")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+@Builder
+public class Review {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "booking_id", nullable = false)
+    private Booking booking;
+
+    @ManyToOne
+    @JoinColumn(name = "parent_id", nullable = false)
+    private User parent;
+
+    @ManyToOne
+    @JoinColumn(name = "caregiver_id", nullable = false)
+    private CaregiverProfile caregiver;
+
+    @Column(nullable = false)
+    private Integer rating;
+
+    private String comment;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+}
