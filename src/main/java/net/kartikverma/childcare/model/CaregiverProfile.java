@@ -18,7 +18,7 @@ public class CaregiverProfile {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "User_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     private String bio;
@@ -42,9 +42,9 @@ public class CaregiverProfile {
 
     //Relationships
     @OneToMany(mappedBy = "caregiver", cascade = CascadeType.ALL)
-    private List<Booking> avialabilitySlots;
+    private List<AvailabilitySlot> avialabilitySlots;
 
-    @OneToMany(mappedBy = "caregive", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "caregiver", cascade = CascadeType.ALL)
     private List<Booking> bookings;
 
     @OneToMany(mappedBy = "caregiver", cascade = CascadeType.ALL)

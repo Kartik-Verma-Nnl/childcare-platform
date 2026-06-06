@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import net.kartikverma.childcare.enums.Role;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,8 +15,6 @@ import java.util.List;
 @Builder
 public class User {
 
-    @jakarta.persistence.Id
-    private Long id1;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,7 +35,7 @@ public class User {
     private Role role;
 
     @CreationTimestamp
-    private LocalDateTime creationAt;
+    private LocalDateTime createdAt;
 
     //Relationships
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)

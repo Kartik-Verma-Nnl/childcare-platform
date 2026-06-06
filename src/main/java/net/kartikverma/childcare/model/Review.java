@@ -3,7 +3,6 @@ package net.kartikverma.childcare.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.boot.webmvc.autoconfigure.WebMvcProperties;
 
 import java.time.LocalDateTime;
 

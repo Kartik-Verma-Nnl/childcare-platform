@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/childcare_db
+    url: jdbc:postgresql://localhost:5432/childcare_db?TimeZone=UTC
     username: postgres
-    password: your_password
+    password: postgres
     driver-class-name: org.postgresql.Driver
 
   jpa:
