@@ -1,4 +1,8 @@
 spring:
+  security:
+    user:
+      name: admin
+      password: admin
   datasource:
     url: jdbc:postgresql://localhost:5432/childcare_db?TimeZone=UTC
     username: postgres
