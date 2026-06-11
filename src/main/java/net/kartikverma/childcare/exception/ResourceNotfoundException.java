@@ -1,4 +1,8 @@
 package net.kartikverma.childcare.exception;
 
-public class ResourceNotfoundException {
+public class ResourceNotfoundException extends RuntimeException {
+
+    public ResourceNotfoundException(String message) {
+        super(message);
+    }
 }
