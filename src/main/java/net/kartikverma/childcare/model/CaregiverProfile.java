@@ -30,6 +30,7 @@ public class CaregiverProfile {
 
     private String specializations;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean isVerified = false;
 
@@ -37,6 +38,7 @@ public class CaregiverProfile {
 
     private String city;
 
+    @Builder.Default
     @Column(precision = 3, scale = 2)
     private BigDecimal averageRating = BigDecimal.ZERO;
 

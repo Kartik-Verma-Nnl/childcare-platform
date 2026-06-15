@@ -31,6 +31,7 @@ public class Booking {
     @JoinColumn(name = "slot_id", nullable = false)
     private AvailabilitySlot slot;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BookingStatus status =  BookingStatus.PENDING;

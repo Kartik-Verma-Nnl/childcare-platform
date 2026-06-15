@@ -30,6 +30,7 @@ public class AvailabilitySlot {
     @Column(nullable = false)
     private LocalTime endTime;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean isBooked = false;
 }
