@@ -4,6 +4,8 @@ import net.kartikverma.childcare.dto.request.BookingRequest;
 import net.kartikverma.childcare.dto.response.BookingResponse;
 import net.kartikverma.childcare.enums.BookingStatus;
 import net.kartikverma.childcare.exception.ResourceNotfoundException;
+import net.kartikverma.childcare.kafka.event.BookingEvent;
+import net.kartikverma.childcare.kafka.producer.BookingEventProducer;
 import net.kartikverma.childcare.model.AvailabilitySlot;
 import net.kartikverma.childcare.model.Booking;
 import net.kartikverma.childcare.model.CaregiverProfile;
@@ -14,6 +16,8 @@ import net.kartikverma.childcare.repository.CaregiverRepository;
 import net.kartikverma.childcare.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import net.kartikverma.childcare.kafka.event.BookingEvent;
+import net.kartikverma.childcare.kafka.producer.BookingEventProducer;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -22,6 +26,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
+
+    @Autowired
+    private BookingEventProducer  bookingEventProducer;
 
     @Autowired
     private BookingRepository bookingRepository;
@@ -91,6 +98,16 @@ public class BookingService {
         slot.setIsBooked(true);
         availabilitySlotRepository.save(slot);
 
+        bookingEventProducer.publishBookingEvent(BookingEvent.builder()
+                .bookingId(booking.getId())
+                .parentEmail(parent.getEmail())
+                .parentName(parent.getName())
+                .caregiverEmail(caregiver.getUser().getEmail())
+                .caregiverName(caregiver.getUser().getName())
+                .status(BookingStatus.PENDING)
+                .message("New booking request created")
+                .build());
+
         return mapToResponse(booking);
     }
 
@@ -129,6 +146,17 @@ public class BookingService {
 
         booking.setStatus(BookingStatus.CONFIRMED);
         bookingRepository.save(booking);
+
+        bookingEventProducer.publishBookingEvent(BookingEvent.builder()
+                .bookingId(booking.getId())
+                .parentEmail(booking.getParent().getEmail())
+                .parentName(booking.getParent().getName())
+                .caregiverEmail(booking.getCaregiver().getUser().getEmail())
+                .caregiverName(booking.getCaregiver().getUser().getName())
+                .status(BookingStatus.CONFIRMED)
+                .message("Booking confirmed by caregiver")
+                .build());
+
         return mapToResponse(booking);
     }
 
@@ -156,6 +184,17 @@ public class BookingService {
 
         booking.setStatus(BookingStatus.CANCELLED);
         bookingRepository.save(booking);
+
+        bookingEventProducer.publishBookingEvent(BookingEvent.builder()
+                .bookingId(booking.getId())
+                .parentEmail(booking.getParent().getEmail())
+                .parentName(booking.getParent().getName())
+                .caregiverEmail(booking.getCaregiver().getUser().getEmail())
+                .caregiverName(booking.getCaregiver().getUser().getName())
+                .status(BookingStatus.CANCELLED)
+                .message("Booking has been cancelled")
+                .build());
+
         return mapToResponse(booking);
     }
 
@@ -169,6 +208,17 @@ public class BookingService {
 
         booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
+
+        bookingEventProducer.publishBookingEvent(BookingEvent.builder()
+                .bookingId(booking.getId())
+                .parentEmail(booking.getParent().getEmail())
+                .parentName(booking.getParent().getName())
+                .caregiverEmail(booking.getCaregiver().getUser().getEmail())
+                .caregiverName(booking.getCaregiver().getUser().getName())
+                .status(BookingStatus.COMPLETED)
+                .message("Booking marked as completed")
+                .build());
+
         return mapToResponse(booking);
     }
 
