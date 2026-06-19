@@ -3,6 +3,7 @@ package net.kartikverma.childcare.model;
 import jakarta.persistence.*;
 import lombok.*;
 import net.kartikverma.childcare.enums.BookingStatus;
+import net.kartikverma.childcare.enums.SessionStatus;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
@@ -35,6 +36,11 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BookingStatus status =  BookingStatus.PENDING;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SessionStatus sessionStatus = SessionStatus.NOT_STARTED;
 
     @Column(precision = 4, scale = 2)
     private BigDecimal durationHours;

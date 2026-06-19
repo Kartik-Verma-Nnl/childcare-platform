@@ -3,6 +3,8 @@ package net.kartikverma.childcare.controller;
 import jakarta.validation.Valid;
 import net.kartikverma.childcare.dto.request.BookingRequest;
 import net.kartikverma.childcare.dto.response.BookingResponse;
+import net.kartikverma.childcare.dto.response.SessionStatusResponse;
+import net.kartikverma.childcare.enums.SessionStatus;
 import net.kartikverma.childcare.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +61,17 @@ public class BookingController {
             Principal principal) {
         return ResponseEntity.ok(
                 bookingService.cancelBooking(principal.getName(), id));
+    }
+
+    //Caregiver updates live session status
+    @PutMapping("{id}/session-status")
+    public ResponseEntity<SessionStatusResponse> updateSessionStatus(
+            @PathVariable Long id,
+            @RequestParam SessionStatus status,
+            Principal principal
+            ) {
+        return ResponseEntity.ok(
+                bookingService.updateSessionStatus(principal.getName(), id, status));
     }
 
     // Caregiver marks booking complete

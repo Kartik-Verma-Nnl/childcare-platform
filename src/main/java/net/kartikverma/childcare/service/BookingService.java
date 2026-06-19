@@ -2,7 +2,9 @@ package net.kartikverma.childcare.service;
 
 import net.kartikverma.childcare.dto.request.BookingRequest;
 import net.kartikverma.childcare.dto.response.BookingResponse;
+import net.kartikverma.childcare.dto.response.SessionStatusResponse;
 import net.kartikverma.childcare.enums.BookingStatus;
+import net.kartikverma.childcare.enums.SessionStatus;
 import net.kartikverma.childcare.exception.ResourceNotfoundException;
 import net.kartikverma.childcare.kafka.event.BookingEvent;
 import net.kartikverma.childcare.kafka.producer.BookingEventProducer;
@@ -16,8 +18,6 @@ import net.kartikverma.childcare.repository.CaregiverRepository;
 import net.kartikverma.childcare.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import net.kartikverma.childcare.kafka.event.BookingEvent;
-import net.kartikverma.childcare.kafka.producer.BookingEventProducer;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -41,6 +41,9 @@ public class BookingService {
 
     @Autowired
     private AvailabilitySlotRepository availabilitySlotRepository;
+
+    @Autowired
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
 
     // Parent creates a booking
     public BookingResponse createBooking(String parentEmail, BookingRequest request) {
@@ -196,6 +199,54 @@ public class BookingService {
                 .build());
 
         return mapToResponse(booking);
+    }
+
+    // Caregiver updates session status during active booking
+    public SessionStatusResponse updateSessionStatus(String email, Long bookingId, SessionStatus newStatus) {
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotfoundException("Booking not found"));
+
+        // Only the assigned caregiver can update session status
+        if (!booking.getCaregiver().getUser().getEmail().equals(email)) {
+            throw new RuntimeException("Unauthorized to update this session");
+        }
+
+        // Booking must be confirmed before session can start
+        if (!booking.getStatus().equals(BookingStatus.CONFIRMED)) {
+            throw new RuntimeException("Booking must be confirmed before updating session status");
+        }
+
+        // Enforce valid status progression
+        validateStatusTransition(booking.getSessionStatus(), newStatus);
+
+        booking.setSessionStatus(newStatus);
+        bookingRepository.save(booking);
+
+        // Push live update to parent via WebSocket (reuses your chat infra)
+        SessionStatusResponse response = SessionStatusResponse.builder()
+                .bookingId(booking.getId())
+                .sessionStatus(booking.getSessionStatus())
+                .updatedAt(java.time.LocalDateTime.now())
+                .build();
+
+        messagingTemplate.convertAndSend("/topic/session/" + booking.getId(), response);
+
+        return response;
+    }
+
+    // Prevent skipping steps or going backwards
+    private void validateStatusTransition(SessionStatus current, SessionStatus next) {
+        java.util.Map<SessionStatus, SessionStatus> allowedNext = java.util.Map.of(
+                SessionStatus.NOT_STARTED, SessionStatus.ARRIVED,
+                SessionStatus.ARRIVED, SessionStatus.IN_PROGRESS,
+                SessionStatus.IN_PROGRESS, SessionStatus.ENDED
+        );
+
+        if (!next.equals(allowedNext.get(current))) {
+            throw new RuntimeException(
+                    "Invalid status transition from " + current + " to " + next);
+        }
     }
 
     // Mark booking as completed
