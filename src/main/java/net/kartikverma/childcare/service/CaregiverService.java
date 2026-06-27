@@ -12,6 +12,8 @@ import net.kartikverma.childcare.repository.AvailabilitySlotRepository;
 import net.kartikverma.childcare.repository.CaregiverRepository;
 import net.kartikverma.childcare.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -31,6 +33,7 @@ public class CaregiverService {
     private UserRepository userRepository;
 
     // Get all verified caregivers
+    @Cacheable(value = "caregivers", key = "'all'")
     public List<CaregiverResponse> getAllVerifiedCaregivers() {
         return caregiverRepository.findByIsVerifiedTrue()
                 .stream()
@@ -39,6 +42,7 @@ public class CaregiverService {
     }
 
     // Get single caregiver by id
+    @Cacheable(value = "caregivers", key = "#id")
     public CaregiverResponse getCaregiverById(Long id) {
         CaregiverProfile profile = caregiverRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotfoundException("Caregiver not found"));
@@ -46,6 +50,7 @@ public class CaregiverService {
     }
 
     // Caregiver updates own profile
+    @CacheEvict(value = "caregivers", allEntries = true)
     public CaregiverResponse updateProfile(String email, CaregiverProfileRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotfoundException("User not found"));

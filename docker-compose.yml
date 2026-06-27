@@ -105,6 +105,8 @@ services:
     depends_on:
       - postgres
       - kafka
+      - redis
+      - jaeger
     ports:
       - "8080:8080"
     environment:
@@ -112,10 +114,24 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       SPRING_MAIL_USERNAME: your_email@gmail.com
       SPRING_MAIL_PASSWORD: your_16_char_app_password
       JWT_SECRET: childcare_super_secret_key_minimum_32_chars
       JWT_EXPIRATION: 86400000
+      OTEL_SERVICE_NAME: childcare-platform
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+
+  redis:
+    image: redis:7-alpine
+    container_name: childcare-redis
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres_data:

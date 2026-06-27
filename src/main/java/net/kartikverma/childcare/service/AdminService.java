@@ -10,6 +10,7 @@ import net.kartikverma.childcare.repository.BookingRepository;
 import net.kartikverma.childcare.repository.CaregiverRepository;
 import net.kartikverma.childcare.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class AdminService {
     }
 
     // Verify a caregiver
+    @CacheEvict(value = "caregivers", allEntries = true)
     public CaregiverResponse verifyCaregiver(Long caregiverId) {
         CaregiverProfile caregiver = caregiverRepository.findById(caregiverId)
                 .orElseThrow(() -> new ResourceNotfoundException("Caregiver not found"));
@@ -50,6 +52,7 @@ public class AdminService {
     }
 
     // Unverify a caregiver (revoke verification)
+    @CacheEvict(value = "caregivers", allEntries = true)
     public CaregiverResponse unverifyCaregiver(Long caregiverId) {
         CaregiverProfile caregiver = caregiverRepository.findById(caregiverId)
                 .orElseThrow(() -> new ResourceNotfoundException("Caregiver not found"));
