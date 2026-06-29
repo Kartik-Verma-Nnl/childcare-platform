@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers("/ws-chat/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/caregiver/all", "api/caregiver/{id}").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         // Admin only routes
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Everything else needs a valid JWT
