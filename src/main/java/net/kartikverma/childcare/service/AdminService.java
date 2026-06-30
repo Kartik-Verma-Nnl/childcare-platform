@@ -2,6 +2,7 @@ package net.kartikverma.childcare.service;
 
 import net.kartikverma.childcare.dto.response.BookingResponse;
 import net.kartikverma.childcare.dto.response.CaregiverResponse;
+import net.kartikverma.childcare.dto.response.PagedResponse;
 import net.kartikverma.childcare.dto.response.UserResponse;
 import net.kartikverma.childcare.exception.ResourceNotfoundException;
 import net.kartikverma.childcare.model.CaregiverProfile;
@@ -11,8 +12,10 @@ import net.kartikverma.childcare.repository.CaregiverRepository;
 import net.kartikverma.childcare.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,6 +71,24 @@ public class AdminService {
                 .stream()
                 .map(this::mapToBookingResponse)
                 .collect(Collectors.toList());
+    }
+
+    public PagedResponse<BookingResponse> getAllBookingsPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<BookingResponse> responsePage = bookingRepository
+                .findAll(pageable)
+                .map(this::mapToBookingResponse);
+
+        return PagedResponse.from(responsePage);
+    }
+
+    public PagedResponse<UserResponse> getAllUsersPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserResponse> responsePage = userRepository
+                .findAll(pageable)
+                .map(this::mapToUserResponse);
+
+        return PagedResponse.from(responsePage);
     }
 
     // Get all users

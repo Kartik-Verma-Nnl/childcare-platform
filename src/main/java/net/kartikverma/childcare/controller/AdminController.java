@@ -2,6 +2,7 @@ package net.kartikverma.childcare.controller;
 
 import net.kartikverma.childcare.dto.response.BookingResponse;
 import net.kartikverma.childcare.dto.response.CaregiverResponse;
+import net.kartikverma.childcare.dto.response.PagedResponse;
 import net.kartikverma.childcare.dto.response.UserResponse;
 import net.kartikverma.childcare.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,5 +46,19 @@ public class AdminController {
     @GetMapping("/users/all")
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(adminService.getAllUsers());
+    }
+
+    @GetMapping("/bookings")
+    public ResponseEntity<PagedResponse<BookingResponse>> getAllBookingsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllBookingsPaged(page, size));
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<PagedResponse<UserResponse>> getAllUsersPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllUsersPaged(page, size));
     }
 }

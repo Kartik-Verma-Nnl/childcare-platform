@@ -5,6 +5,7 @@ import net.kartikverma.childcare.dto.request.AvailabilityRequest;
 import net.kartikverma.childcare.dto.request.CaregiverProfileRequest;
 import net.kartikverma.childcare.dto.response.AvailabilitySlotResponse;
 import net.kartikverma.childcare.dto.response.CaregiverResponse;
+import net.kartikverma.childcare.dto.response.PagedResponse;
 import net.kartikverma.childcare.service.CaregiverService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,14 @@ public class CaregiverController {
     @GetMapping("/all")
     public ResponseEntity<List<CaregiverResponse>> getAllCaregivers() {
         return ResponseEntity.ok(caregiverService.getAllVerifiedCaregivers());
+    }
+
+    // Paginated version — preferred for production use
+    @GetMapping
+    public ResponseEntity<PagedResponse<CaregiverResponse>> getAllCaregiversPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(caregiverService.getAllVerifiedCaregiversPaged(page, size));
     }
 
     // Public — single caregiver

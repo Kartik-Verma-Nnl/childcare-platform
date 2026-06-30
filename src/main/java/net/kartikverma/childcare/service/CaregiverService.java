@@ -4,6 +4,7 @@ import net.kartikverma.childcare.dto.request.AvailabilityRequest;
 import net.kartikverma.childcare.dto.request.CaregiverProfileRequest;
 import net.kartikverma.childcare.dto.response.AvailabilitySlotResponse;
 import net.kartikverma.childcare.dto.response.CaregiverResponse;
+import net.kartikverma.childcare.dto.response.PagedResponse;
 import net.kartikverma.childcare.exception.ResourceNotfoundException;
 import net.kartikverma.childcare.model.AvailabilitySlot;
 import net.kartikverma.childcare.model.CaregiverProfile;
@@ -14,8 +15,10 @@ import net.kartikverma.childcare.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,6 +42,15 @@ public class CaregiverService {
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    public PagedResponse<CaregiverResponse> getAllVerifiedCaregiversPaged(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CaregiverResponse> responsePage = caregiverRepository
+                .findByIsVerifiedTrue(pageable)
+                .map(this::mapToResponse);
+
+        return PagedResponse.from(responsePage);
     }
 
     // Get single caregiver by id
