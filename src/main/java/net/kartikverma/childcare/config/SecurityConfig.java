@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/ws-chat/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/caregiver/all", "api/caregiver/{id}", "/api/caregiver/").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/caregiver/all", "/api/caregiver/{id}", "/api/caregiver/", "/api/caregiver").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         // Admin only routes
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
