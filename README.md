@@ -98,31 +98,31 @@ A **production-grade** evening childcare matching platform built with **Spring B
 ## 🏗 Architecture
 
 ```
-┌─────────────┐  ┌──────────────┐  ┌───────────────┐
-│  Parent App  │  │ Caregiver App│  │ Admin Dashboard│
-└──────┬───────┘  └──────┬───────┘  └──────┬────────┘
-       │                 │                  │
-       └────────────┬────┴──────────────────┘
-                    │
-           ┌────────▼────────┐
-           │  Spring Boot    │
-           │   REST API      │──── JWT Authentication
-           │  (Port 8080)    │──── WebSocket (STOMP)
-           └───┬──────┬──────┘
-               │      │
-    ┌──────────┤      ├──────────┐
-    │          │      │          │
-┌───▼───┐ ┌───▼───┐ ┌▼──────┐ ┌─▼────────┐
-│Postgre│ │ Redis │ │ Kafka │ │ Email    │
-│  SQL   │ │ Cache │ │       │ │ (SMTP)  │
-└────────┘ └───────┘ └───────┘ └──────────┘
+┌─────────────────┐        ┌─────────────────┐        ┌─────────────────┐
+│   Parent App    │        │  Caregiver App  │        │ Admin Dashboard │
+└────────┬────────┘        └────────┬────────┘        └────────┬────────┘
+         │                          │                          │
+         └──────────────────────────┼──────────────────────────┘
+                                    │
+                           ┌────────▼────────┐
+                           │   Spring Boot   │
+                           │    REST API     │ ──── JWT Authentication
+                           │   (Port 8080)   │ ──── WebSocket (STOMP)
+                           └────┬───────┬────┘
+                                │       │
+     ┌──────────────────────────┴───────┴────────────────────────┐
+     │            │                             │                │
+┌────▼────┐  ┌────▼────┐                   ┌────▼────┐  ┌────▼────┐
+│Postgres │  │  Redis  │                   │  Kafka  │  │  Email  │
+│   SQL   │  │  Cache  │                   │ Broker  │  │ (SMTP)  │
+└─────────┘  └─────────┘                   └─────────┘  └─────────┘
 
-          ┌─── Observability Stack ───┐
-          │                           │
-  ┌───────┴───┐  ┌──────────┐  ┌─────┴──────┐
-  │Prometheus │  │   ELK    │  │  Jaeger +  │
-  │ + Grafana │  │  Stack   │  │ OpenTelemetry│
-  └───────────┘  └──────────┘  └────────────┘
+          ┌───────── Observability Stack ─────────┐
+          │                                       │
+    ┌─────▼─────┐          ┌─────▼─────┐          ┌─────▼─────┐
+    │Prometheus │          │    ELK    │          │ Jaeger +  │
+    │ & Grafana │          │   Stack   │          │ OpenTele  │
+    └───────────┘          └───────────┘          └───────────┘
 ```
 
 ---
@@ -319,47 +319,50 @@ cp src/main/resources/application-example.yml src/main/resources/application.yam
 ## 🗄 Database Schema
 
 ```
-┌──────────────────┐       ┌──────────────────────┐
-│      users       │       │  caregiver_profiles   │
-├──────────────────┤       ├──────────────────────┤
-│ id (PK)          │──1:1──│ id (PK)              │
-│ name             │       │ user_id (FK)         │
-│ email (UNIQUE)   │       │ bio                  │
-│ password         │       │ hourly_rates         │
-│ phone            │       │ experience_years     │
-│ role (ENUM)      │       │ specializations      │
-│ created_at       │       │ is_verified          │
-└──────────────────┘       │ city                 │
-        │                  │ average_rating       │
-        │                  │ doc_url              │
-        │ 1:*              └──────────┬───────────┘
-        │                             │ 1:*
-┌───────▼──────────┐       ┌──────────▼───────────┐
-│    bookings      │       │ availability_slots    │
-├──────────────────┤       ├──────────────────────┤
-│ id (PK)          │       │ id (PK)              │
-│ parent_id (FK)   │       │ caregiver_id (FK)    │
-│ caregiver_id (FK)│       │ date                 │
-│ slot_id (FK)     │       │ start_time           │
-│ status (ENUM)    │       │ end_time             │
-│ session_status   │       │ is_booked            │
-│ duration_hours   │       └──────────────────────┘
-│ total_amount     │
-│ notes            │
-│ created_at       │
-└───────┬──────────┘
-        │ 1:1          1:*
-┌───────▼──────────┐  ┌──────────────────┐
-│    reviews       │  │  chat_messages   │
-├──────────────────┤  ├──────────────────┤
-│ id (PK)          │  │ id (PK)          │
-│ booking_id (FK)  │  │ booking_id (FK)  │
-│ caregiver_id (FK)│  │ sender_id (FK)   │
-│ parent_id (FK)   │  │ content          │
-│ rating           │  │ timestamp        │
-│ comment          │  └──────────────────┘
-│ created_at       │
-└──────────────────┘
+┌────────────────────────┐             ┌────────────────────────┐
+│         users          │             │   caregiver_profiles   │
+├────────────────────────┤             ├────────────────────────┤
+│ id (PK)                │────────1:1──│ id (PK)                │
+│ name                   │             │ user_id (FK)           │
+│ email (UNIQUE)         │             │ bio                    │
+│ password               │             │ hourly_rates           │
+│ phone                  │             │ experience_years       │
+│ role (ENUM)            │             │ specializations        │
+│ created_at             │             │ is_verified            │
+└────────────────────────┘             │ city                   │
+        │                              │ average_rating         │
+        │ 1:*                          │ doc_url                │
+        │                              └───────────┬────────────┘
+        ▼                                          │ 1:*
+┌───────▼──────────────┐                           ▼
+│       bookings       │               ┌───────────▼────────────┐
+├──────────────────────┤               │   availability_slots   │
+│ id (PK)              │               ├────────────────────────┤
+│ parent_id (FK)       │               │ id (PK)                │
+│ caregiver_id (FK)    │               │ caregiver_id (FK)      │
+│ slot_id (FK)         │               │ date                   │
+│ status (ENUM)        │               │ start_time             │
+│ session_status (ENUM)│               │ end_time               │
+│ duration_hours       │               │ is_booked              │
+│ total_amount         │               └────────────────────────┘
+│ notes                │
+│ created_at           │
+└──────────────────────┘
+        │         │
+        │         └─────────────────┐ 1:*
+        │                           │
+        │ 1:1                       │
+┌───────▼──────────────┐     ┌──────▼───────────────┐
+│       reviews        │     │     chat_messages    │
+├──────────────────────┤     ├──────────────────────┤
+│ id (PK)              │     │ id (PK)              │
+│ booking_id (FK)      │     │ booking_id (FK)      │
+│ caregiver_id (FK)    │     │ sender_id (FK)       │
+│ parent_id (FK)       │     │ content              │
+│ rating               │     │ timestamp            │
+│ comment              │     └──────────────────────┘
+│ created_at           │
+└──────────────────────┘
 ```
 
 ### Enums
