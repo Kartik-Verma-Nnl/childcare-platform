@@ -25,7 +25,7 @@ A **production-grade** evening childcare matching platform built with **Spring B
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
-- [Screenshots](#-screenshots)
+- [Screenshots](#-screenshots--live-demo)
 - [Getting Started](#-getting-started)
 - [API Endpoints](#-api-endpoints)
 - [Database Schema](#-database-schema)
@@ -127,32 +127,138 @@ A **production-grade** evening childcare matching platform built with **Spring B
 
 ---
 
-## 📸 Screenshots
+## 📸 Screenshots — Live Demo
 
-### Swagger UI — Interactive API Documentation
+> All screenshots below are taken from the **live running application** with all 11 Docker containers active.
+
+### 🐳 Docker Containers — All 11 Services Running
+
+All infrastructure services orchestrated via a single `docker compose up -d --build` command:
+
+```
+NAMES                     STATUS          PORTS
+childcare-app             Up 29 minutes   0.0.0.0:8080->8080/tcp
+childcare-grafana         Up 29 minutes   0.0.0.0:3000->3000/tcp
+childcare-kibana          Up 29 minutes   0.0.0.0:5601->5601/tcp
+childcare-filebeat        Up 29 minutes
+childcare-kafka           Up 29 minutes   0.0.0.0:9092->9092/tcp
+childcare-jaeger          Up 29 minutes   0.0.0.0:4317-4318->4317-4318/tcp, 0.0.0.0:16686->16686/tcp
+childcare-prometheus      Up 29 minutes   0.0.0.0:9090->9090/tcp
+childcare-postgres        Up 29 minutes   0.0.0.0:5432->5432/tcp
+childcare-elasticsearch   Up 29 minutes   0.0.0.0:9200->9200/tcp
+childcare-redis           Up 29 minutes   0.0.0.0:6379->6379/tcp
+childcare-zookeeper       Up 29 minutes   2181/tcp
+```
+
+---
+
+### 📖 Swagger UI — Interactive API Documentation
 > Access at `http://localhost:8080/swagger-ui/index.html`
+
+The Swagger UI provides a fully interactive API explorer with **OpenAPI 3.0** specification. It lists all controllers — **Caregiver**, **Booking**, **Auth**, **Chat**, **Review**, **Admin**, and **Parent** — with JWT authorization support via the **Authorize** button.
 
 ![Swagger UI](docs/images/swagger-ui.png)
 
-### Grafana — Metrics Dashboards
-> Access at `http://localhost:3000` (admin/admin)
+**Key highlights:**
+- Complete REST API documentation with request/response schemas
+- JWT Bearer token authentication support via the "Authorize" button
+- Server URL auto-detection (`http://localhost:8080`)
+- Try-it-out functionality for testing endpoints directly
 
-![Grafana Dashboard](docs/images/grafana-dashboard.png)
+---
 
-### Prometheus — Metrics Query Engine
+### 🔍 Jaeger — Distributed Tracing (Trace Search)
+> Access at `http://localhost:16686`
+
+Jaeger captures **all distributed traces** from the application using **OpenTelemetry auto-instrumentation**. The screenshot shows the search view with the `childcare-platform` service selected, displaying **20 traces** including API calls like `GET /api/caregiver`, `POST /api/auth/register`, `GET /v3/api-docs`, and Prometheus scrape requests (`GET /actuator/prometheus`).
+
+![Jaeger UI - Trace Search](docs/images/jaeger-ui.png)
+
+**Key highlights:**
+- Service auto-discovery via OpenTelemetry Java Agent
+- Duration scatter plot showing trace latencies over time
+- 32 operations tracked across REST endpoints, Swagger, and Actuator
+- Sort by Most Recent, Duration, or download results
+
+---
+
+### 🔍 Jaeger — Distributed Tracing (Trace Detail)
+
+Clicking into a specific trace reveals the **full span waterfall** — showing the exact execution path of a `GET /api/caregiver` request with **7 spans** across **4 depth levels**. The trace breaks down the 56ms request into individual operations: HTTP handler → JPA Repository (`CaregiverRepository.findByIsVerified`) → SQL queries (`SELECT childcare_db`).
+
+![Jaeger UI - Trace Detail](docs/images/jaeger-trace-detail.png)
+
+**Key highlights:**
+- Full span waterfall with timing breakdown for each operation
+- 7 spans showing HTTP → JPA → SQL query execution path
+- Individual span durations visible (36.3ms for repository call, ~1ms per SQL query)
+- Trace metadata: Service count, total depth, and total span count
+
+---
+
+### 📈 Prometheus — Metrics Query Engine
 > Access at `http://localhost:9090`
+
+Prometheus scrapes **Spring Boot Actuator metrics** every 5 seconds. The screenshot shows a live graph of `jvm_memory_used_bytes` — tracking JVM heap and non-heap memory usage across different memory pools (G1 Eden, G1 Old Gen, Metaspace, CodeCache, etc.).
 
 ![Prometheus UI](docs/images/prometheus-ui.png)
 
-### Jaeger — Distributed Tracing
-> Access at `http://localhost:16686`
+**Key highlights:**
+- Real-time JVM memory monitoring with ~160MB heap usage visible
+- Multiple memory pool series graphed (Eden, Old Gen, Survivor, Metaspace)
+- 1-hour time window with auto-refresh
+- PromQL query support for ad-hoc metric exploration
+- Scraping from `/actuator/prometheus` endpoint every 5s
 
-![Jaeger UI](docs/images/jaeger-ui.png)
+---
 
-### Kibana — Log Analytics
+### 📊 Grafana — Metrics Visualization & Dashboards
+> Access at `http://localhost:3000` (admin/admin)
+
+Grafana provides a powerful **dashboard builder** that connects to Prometheus for visualizing application and infrastructure metrics. The screenshot shows the Grafana home page after login, ready to connect data sources and build custom dashboards.
+
+![Grafana Dashboard](docs/images/grafana-dashboard.png)
+
+**Key highlights:**
+- Pre-configured with Prometheus data source connectivity
+- Dark theme with professional dashboard UI
+- Supports custom dashboards for JVM metrics, HTTP request rates, error rates, and business KPIs
+- Alert rules for proactive monitoring
+- Built-in tutorials for Data Sources and Dashboard creation
+
+---
+
+### 📋 Kibana — Log Analytics (ELK Stack)
 > Access at `http://localhost:5601`
 
+Kibana provides **centralized log management** via the ELK stack (Elasticsearch + Filebeat + Kibana). The screenshot shows the **Discover** view with the `childcare-logs` data view, displaying **1,236 structured log documents** shipped from the application via Filebeat. Logs include fields like `level`, `application`, `host.name`, `@timestamp`, and more.
+
 ![Kibana Dashboard](docs/images/kibana-dashboard.png)
+
+**Key highlights:**
+- **1,236 log documents** ingested and indexed in Elasticsearch
+- 26 available fields for filtering and analysis (level, application, host.name, trace_id, etc.)
+- Histogram visualization showing log volume over time
+- KQL (Kibana Query Language) support for powerful log filtering
+- Structured JSON logging via `logstash-logback-encoder`
+- Filebeat auto-ships application logs from `./logs/` directory
+
+---
+
+### 🏥 Spring Boot Actuator — Health Check
+> Access at `http://localhost:8080/actuator/health`
+
+The Actuator health endpoint shows the real-time status of all connected infrastructure:
+
+![Actuator Health](docs/images/actuator-health.png)
+
+| Component | Status | Details |
+|-----------|--------|---------|
+| **Database (PostgreSQL)** | ✅ UP | `PostgreSQL` — `validationQuery: isValid()` |
+| **Redis Cache** | ✅ UP | `version: 7.4.9` |
+| **Disk Space** | ✅ UP | Free: ~1TB |
+| **Ping** | ✅ UP | Application responsive |
+| **Mail (SMTP)** | ⚠️ DOWN | Expected — requires real Gmail App Password |
 
 ---
 
@@ -198,6 +304,9 @@ docker ps
 
 # Test the API
 curl http://localhost:8080/swagger-ui/index.html
+
+# Check health
+curl http://localhost:8080/actuator/health
 ```
 
 ### Local Development (Without Docker)
@@ -212,6 +321,13 @@ cp src/main/resources/application-example.yml src/main/resources/application.yam
 
 # 3. Run the application
 ./mvnw spring-boot:run
+```
+
+### Running with OpenTelemetry (Local)
+
+```powershell
+# Use the provided PowerShell script for local OTEL tracing
+.\run-with-otel.ps1
 ```
 
 ---
@@ -457,6 +573,8 @@ childcare/
 ├── Dockerfile                  # Multi-stage build
 ├── prometheus.yml              # Prometheus scrape config
 ├── filebeat.yml                # Log shipping config
+├── run-with-otel.ps1           # Local OTEL tracing script
+├── opentelemetry-javaagent.jar # OTEL Java agent
 └── pom.xml                     # Maven dependencies
 ```
 
