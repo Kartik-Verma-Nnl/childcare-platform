@@ -33,9 +33,9 @@ build/
 .vscode/
 
 ### Project Specific ###
-src/main/resources/application.yaml
 opentelemetry-javaagent.jar
 logs/
 *.env
 .DS_Store
 Thumbs.db
+.env
